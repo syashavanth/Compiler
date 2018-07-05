@@ -12,14 +12,14 @@
  */
 
 #include <cstdlib>
-
+#include "scanner.h"
 using namespace std;
 
-/*
- * 
- */
+
 int main(int argc, char** argv) {
 
+    token t;
+    t.Tokenise("test_input.txt");
     return 0;
 }
 
