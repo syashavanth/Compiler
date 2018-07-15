@@ -1,129 +1,230 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
+#include "Lexer.h"
 #include <iostream>
-#include "scanner.h"
 #include <fstream>
+#include <vector>
 
-void token::Tokenise(string filename)
+vector<token*> t;
+
+void Tokenise(string filename)
 {
-    ifstream ifs;
-    ifs.open(filename);
-    
-    char c;
-    string word;
-    
-    while(ifs.get(c))
-    {
-        if(c==' ' || c=='\n' || c=='\t')
-        {
-            int result = tokenise_word(word);
-            cout<<"tokenize ";
-            cout<<word;
-            
-            word = "";
-            cout<<result<<endl;
-        }
-        else
-        {
-            word.push_back(c);
-        }
-    }
+	ifstream ifs;
+	ifs.open(filename);
+	int result;
+
+	char c;
+	string word;
+
+	//cout << "Tokenise " << endl;
+	while (ifs.get(c))
+	{
+		if (isdelimeter(c))
+		{
+			
+			cout << c;
+			continue;
+		}
+		else if (isSpecial_Sybmol(c))
+		{
+			result = SPL_CHAR;
+		}
+		else if (isalpha(c) || c == '_')
+		{
+			ifs.unget();
+			result = identifier_check(ifs);
+		}
+		else if(isdigit(c))
+		{
+			ifs.unget();
+			result = check_numeric_const(ifs);
+		}
+		else if (c == '\"')
+		{
+			result = check_string_const(ifs);
+		}
+		else if (c == '\'')
+		{
+			ifs.get(c);
+			ifs.get(c);
+			if (c == '\'')
+				result = CONST;
+			else
+				result = -1;
+		}
+		else
+		{
+			ifs.unget();
+			result = isoperator(ifs);
+		}
+		cout << result;
+	}
 }
 
-int token::tokenise_word(string word)
+int identifier_check(ifstream& ifs)
 {
-    if(iskeyword(word))
-    {
-        return KEYWORD;
-    }
-    else if(isalpha(word[0]) || word[0]=='_')
-    {
-        //check if identifier
-        cout<<"IDEnt";
-        if(identifier_check(word))
-            return IDENTIFIER;
-        else
-            return -1;
-    }
-    else if(isoperator(word))
-    {
-        return OPERATOR;
-    }
-    else if(isdigit(word[0]))
-    {
-        if(check_digit(word))
-            return CONST;
-        else
-            return -1;
-    }
-    else if(word[0]=='"' || word[0]=='\'')
-    {
-        //check for string constant
-    }
-    
+	char c;
+	string word = "";
+
+	while(ifs.get(c))
+	{
+		if (isalnum(c) || c == '_')
+		{
+			word.push_back(c);
+			continue;
+		}
+		else
+		{
+			ifs.unget();
+			break;
+		}
+	}
+	token *temp = new token();
+	//cout << word;
+	if (iskeyword(word))
+	{
+		temp->token_type = KEYWORD;
+		temp->token_value = word;
+		t.push_back(temp);
+		return KEYWORD;
+	}
+	else
+	{
+		temp->token_type = IDENTIFIER;
+		temp->token_value = word;
+		t.push_back(temp);
+		return IDENTIFIER;
+	}
 }
 
-bool token::identifier_check(string word)
+int check_numeric_const(ifstream& ifs)
 {
-    if(word.size()>32)
-    {
-        return false;
-    }
-    for(string::iterator c = word.begin()+1; c!=word.end(); c++)
-    {
-        if(!isalpha(*c) && !isdigit(*c) && *c!='_')
-            return false;
-    }
-    return true;
-    
+	bool d = false;
+	char c;
+	string word = "";
+	token *temp = new token();
+	
+	while (ifs.get(c))
+	{
+		if (isdigit(c))
+		{
+			word.push_back(c);
+			continue;
+		}
+		else if (c == '.' && !d)
+		{
+			d = true;
+		}
+		else
+		{
+			ifs.unget();
+			temp->token_type = CONST;
+			temp->token_value = word;
+			t.push_back(temp);
+
+			return CONST;
+		}
+	}
+	return -1;
 }
 
-bool token::check_digit(string word)
+int check_string_const(ifstream& ifs)
 {
-    bool d = false;
-    
-    for(string::iterator i = word.begin(); i<word.end(); i++)
-    {
-        if(!isdigit(*i))
-        {
-            if(*i=='.' && !d )
-            {
-                d = true;
-            }
-            else
-            {
-                return false;
-            }
-        }
-    }
-    
-    return true;
+	string word = "";
+	char c;
+	token *temp = new token();
+	while(ifs.get(c))
+	{
+		if (c == '\"')
+		{
+			//ifs.unget();
+			temp->token_type = CONST;
+			temp->token_value = word;
+			t.push_back(temp);
+
+			return CONST;
+		}
+		word.push_back(c);
+	}
+
+	return -1;
+
+	
 }
 
-bool token::isoperator(string word)
+int isoperator(ifstream& ifs)
 {
-    for(int i = 0; i<15; i++ )
-    {
-        if(word.compare(op_list[i])==0)
-            return true;
-    }
-    return false;
+	string word = "";
+	char c;
+	token *temp = new token();
+
+	while (ifs.get(c))
+	{
+		if (isdelimeter(c) || isalnum(c) || c == '_' || c== '\"' || c=='\'')
+		{
+			ifs.unget();
+			break;
+		}
+		word.push_back(c);
+	}
+	
+	for (unsigned int i = 0; i < op_list->size(); i++)
+	{
+		if (word.compare(op_list[i]))
+		{
+			temp->token_type = OPERATOR;
+			temp->token_value = word;
+			t.push_back(temp);
+
+			return OPERATOR;
+		}
+	}
+	return -1;
 }
 
-bool token::iskeyword(string word)
+bool iskeyword(string word)
 {
-    for(int i = 0; i<12; i++ )
-    {
-        if(word.compare(key_list[i])==0)
-        {
-            cout<<key_list[i];
-            return true;
-    
-        }
-    }
-    return false;
+	for (int i = 0; i<12; i++)
+	{
+		if (word.compare(key_list[i]) == 0)
+		{
+			//cout << key_list[i];
+			return true;
+
+		}
+	}
+	return false;
+}
+
+bool isdelimeter(char c)
+{
+	if (c == ' ' || c == '\n' || c == '\r' || c == '\t')
+	{
+		return true;
+	}
+
+	return false;
+}
+
+bool isSpecial_Sybmol(char c)
+{
+	if (c == '(' || c == ')' || c == ',' || c == ';' || c == '{' || c == '}' || c == '[' || c == ']')
+	{
+		token *temp = new token();
+
+		temp->token_type = SPL_CHAR;
+		temp->token_value = to_string(c);
+
+		t.push_back(temp);
+		return true;
+	}
+	return false;
+}
+
+
+Lexer::Lexer()
+{
+}
+
+
+Lexer::~Lexer()
+{
 }
