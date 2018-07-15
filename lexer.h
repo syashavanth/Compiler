@@ -8,7 +8,7 @@ using namespace std;
 
 enum TOKENS_TYPE { IDENTIFIER = 1, KEYWORD, SPL_CHAR, OPERATOR, CONST };
 
-static string op_list[] = { "+", "-", "*", "/", "%", ">", "<", "=", "==", "!=", ">=", "<=", "&&", "||", "!" };
+static string op_list[] = { "+", "-", "*", "/", "%", ">", "<", "=", "==", "!=", ">=", "<=", "&&", "||", "!" , "<<", ">>"};
 static string key_list[] = { "int", "float", "char", "double", "if", "else", "switch", "while", "do", "include", "return", "break" };
 
 class token
