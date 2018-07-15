@@ -18,8 +18,7 @@ void Tokenise(string filename)
 	while (ifs.get(c))
 	{
 		if (isdelimeter(c))
-		{
-			
+		{	
 			cout << c;
 			continue;
 		}
@@ -52,6 +51,7 @@ void Tokenise(string filename)
 		}
 		else
 		{
+			//cout << c;
 			ifs.unget();
 			result = isoperator(ifs);
 		}
@@ -69,7 +69,7 @@ int identifier_check(ifstream& ifs)
 		if (isalnum(c) || c == '_')
 		{
 			word.push_back(c);
-			continue;
+			//continue;
 		}
 		else
 		{
@@ -166,10 +166,17 @@ int isoperator(ifstream& ifs)
 		word.push_back(c);
 	}
 	
-	for (unsigned int i = 0; i < op_list->size(); i++)
+	
+	
+	for (unsigned int i = 0; i < 17; i++)
 	{
-		if (word.compare(op_list[i]))
+		//cout << op_list->size();
+		//cout << word << endl;
+		//cout << op_list[i] << endl;
+
+		if (word.compare(op_list[i])==0)
 		{
+			//cout << "equal";
 			temp->token_type = OPERATOR;
 			temp->token_value = word;
 			t.push_back(temp);
