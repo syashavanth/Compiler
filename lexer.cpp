@@ -3,9 +3,10 @@
 #include <fstream>
 #include <vector>
 
-vector<token*> t;
+//vector<token*> t;
 
-void Tokenise(string filename)
+
+void Lexer::Tokenise(string filename)
 {
 	ifstream ifs;
 	ifs.open(filename);
@@ -59,7 +60,7 @@ void Tokenise(string filename)
 	}
 }
 
-int identifier_check(ifstream& ifs)
+int Lexer::identifier_check(ifstream& ifs)
 {
 	char c;
 	string word = "";
@@ -95,7 +96,7 @@ int identifier_check(ifstream& ifs)
 	}
 }
 
-int check_numeric_const(ifstream& ifs)
+int Lexer::check_numeric_const(ifstream& ifs)
 {
 	bool d = false;
 	char c;
@@ -126,7 +127,7 @@ int check_numeric_const(ifstream& ifs)
 	return -1;
 }
 
-int check_string_const(ifstream& ifs)
+int Lexer::check_string_const(ifstream& ifs)
 {
 	string word = "";
 	char c;
@@ -150,7 +151,7 @@ int check_string_const(ifstream& ifs)
 	
 }
 
-int isoperator(ifstream& ifs)
+int Lexer::isoperator(ifstream& ifs)
 {
 	string word = "";
 	char c;
@@ -187,13 +188,14 @@ int isoperator(ifstream& ifs)
 	return -1;
 }
 
-bool iskeyword(string word)
+bool Lexer::iskeyword(string word)
 {
 	for (int i = 0; i<12; i++)
 	{
 		if (word.compare(key_list[i]) == 0)
 		{
 			//cout << key_list[i];
+
 			return true;
 
 		}
@@ -201,7 +203,7 @@ bool iskeyword(string word)
 	return false;
 }
 
-bool isdelimeter(char c)
+bool Lexer::isdelimeter(char c)
 {
 	if (c == ' ' || c == '\n' || c == '\r' || c == '\t')
 	{
@@ -211,7 +213,7 @@ bool isdelimeter(char c)
 	return false;
 }
 
-bool isSpecial_Sybmol(char c)
+bool Lexer::isSpecial_Sybmol(char c)
 {
 	if (c == '(' || c == ')' || c == ',' || c == ';' || c == '{' || c == '}' || c == '[' || c == ']')
 	{
@@ -224,6 +226,11 @@ bool isSpecial_Sybmol(char c)
 		return true;
 	}
 	return false;
+}
+
+vector<token*> Lexer::get_All_Tokens()
+{
+	return t;
 }
 
 
