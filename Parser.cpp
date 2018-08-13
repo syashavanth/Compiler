@@ -17,9 +17,9 @@ Parser::~Parser()
 
 bool Parser::program()
 {
-	if (data_decl(tok))
+	if (data_decl())
 	{
-		if (func_list(tok))
+		if (func_list())
 		{
 			return true;
 		}
