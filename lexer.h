@@ -3,6 +3,7 @@
 #define LEXER_H
 
 #include <string>
+#include <vector>
 using namespace std;
 
 
@@ -17,24 +18,31 @@ public:
 
 	int token_type;
 	string token_value;
+	int int_value;
 };
-
-void Tokenise(string s);
-
-int check_numeric_const(ifstream&);
-int isoperator(ifstream&);
-bool iskeyword(string word);
-int identifier_check(ifstream&);
-bool isdelimeter(char c);
-
-int check_string_const(ifstream&);
-
-bool isSpecial_Sybmol(char c);
 
 class Lexer
 {
 public:
+	vector<token*> t;
+
+	vector<token*> get_All_Tokens();
 	Lexer();
+	
+	void Tokenise(string s);
+
+	int check_numeric_const(ifstream&);
+	int isoperator(ifstream&);
+	bool iskeyword(string word);
+	int identifier_check(ifstream&);
+	bool isdelimeter(char c);
+
+	int check_string_const(ifstream&);
+
+	bool isSpecial_Sybmol(char c);
+
+
+
 	~Lexer();
 };
 
