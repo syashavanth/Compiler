@@ -2,9 +2,9 @@
 #include <iostream>
 
 
-Parser::Parser(vector<token*> tok)
+Parser::Parser(vector<token*> tok) : all_tokens(tok), current_token(tok.begin())
 {
-	if (program(*tok[0]))
+	if (program())
 	{
 		std::cout << "parsing successfull" << endl;
 	}
@@ -15,7 +15,7 @@ Parser::~Parser()
 {
 }
 
-bool Parser::program(token& tok)
+bool Parser::program()
 {
 	if (data_decl(tok))
 	{
@@ -27,12 +27,12 @@ bool Parser::program(token& tok)
 	return false;
 }
 
-bool Parser::data_decl(token& tok)
+bool Parser::data_decl()
 {
 	return true;
 }
 
-bool Parser::func_list(token& tok)
+bool Parser::func_list()
 {
 	return true;
 }
