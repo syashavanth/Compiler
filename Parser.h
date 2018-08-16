@@ -15,6 +15,7 @@ public:
 	bool func1();
 	bool func_decl();
 	
+	//bool type_id();
 	bool type_name();
 	bool parameter_list();
 	bool nonempty_list();
@@ -61,6 +62,8 @@ public:
 
 	bool factor();
 	bool factor1();
+
+	bool isepsilon();
 
 
 };
