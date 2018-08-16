@@ -21,7 +21,10 @@ bool Parser::program()
 	{
 		if (func_list())
 		{
-			return true;
+			if (current_token == all_tokens.end())
+			{
+				return true;
+			}
 		}
 	}
 	return false;
@@ -29,16 +32,55 @@ bool Parser::program()
 
 bool Parser::data_decl()
 {
-	return true;
+	if (type_name())
+	{
+		if (id_list())
+		{
+			if (current_token != all_tokens.end() && ((*current_token)->token_type == SPL_CHAR ) && !((*current_token)->token_value.compare(";")))
+			{
+				current_token++;
+				data_decl();
+			}
+			else
+			{
+				current_token--;
+				current_token--;
+				return isepsilon();
+			}
+
+		}
+		return false;
+	}
+	return isepsilon();
 }
 
 bool Parser::func_list()
 {
-	return true;
+	//<func list> -> <func> <func list>
+	if (func())
+	{
+		if (func_list())
+		{
+			return true;
+		}
+
+	}
+	return false;
 }
 
 bool Parser::func()
 {
+	if (func_decl())
+	{
+		if (func1())
+		{
+			return true;
+		}
+		else
+		{
+			return false;
+		}
+	}
 	return false;
 }
 
@@ -49,11 +91,54 @@ bool Parser::func1()
 
 bool Parser::func_decl()
 {
-	return false;
+	//<func decl> -> <type name> ID left_parenthesis <parameter list> right_parenthesis
+	if (type_name())
+	{
+		if ((*current_token)->token_type == IDENTIFIER)
+		{
+			current_token++;
+		}
+		else
+		{
+			return false;
+		}
+		if ((*current_token)->token_type == SPL_CHAR && !(*current_token)->token_value.compare("("))
+		{
+			current_token++;
+		}
+		else
+		{
+			return false;
+		}
+		if (parameter_list)
+		{
+
+		}
+		else
+		{
+			return false;
+		}
+		if ((*current_token)->token_type == SPL_CHAR && !(*current_token)->token_value.compare(")"))
+		{
+			current_token++;
+			return true;
+		}
+		else
+		{
+			return false;
+		}
+
+	}
+	return isepsilon();
 }
 
 bool Parser::type_name()
 {
+	if ((*current_token)->token_type == KEYWORD && (!(*current_token)->token_value.compare("int") || !(*current_token)->token_value.compare("binary") || !(*current_token)->token_value.compare("decimal") || !(*current_token)->token_value.compare("void")))
+	{
+		current_token++;
+		return true;
+	}
 	return false;
 }
 
@@ -74,6 +159,13 @@ bool Parser::extended_nonempty_list()
 
 bool Parser::id_list()
 {
+	if (id())
+	{
+		/*if (extended_id_list)
+		{
+			//<extended id list> -> comma <id> <extended id list>
+		}*/
+	}
 	return false;
 }
 
@@ -84,11 +176,18 @@ bool Parser::extended_id_list()
 
 bool Parser::id()
 {
+	if ((*current_token)->token_type == IDENTIFIER)
+	{
+		current_token++;
+		//ID1
+		return true;
+	}
 	return false;
 }
 
 bool Parser::id1()
 {
+
 	return false;
 }
 
@@ -230,5 +329,10 @@ bool Parser::factor()
 bool Parser::factor1()
 {
 	return false;
+}
+
+bool Parser::isepsilon()
+{
+	return true;
 }
 
