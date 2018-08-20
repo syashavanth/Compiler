@@ -8,6 +8,10 @@ Parser::Parser(vector<token*> tok) : all_tokens(tok), current_token(tok.begin())
 	{
 		std::cout << "parsing successfull" << endl;
 	}
+	else
+	{
+		std::cout << "Syntax Error" << endl;
+	}
 }
 
 
@@ -86,6 +90,26 @@ bool Parser::func()
 
 bool Parser::func1()
 {
+	//<func1>->semicolon
+	//<func1>->left_brace <data decls> <statements> right_brace
+	if ((*current_token)->token_type == SPL_CHAR && !(*current_token)->token_value.compare(";"))
+	{
+		current_token++;
+		return true;
+	}
+	else if ((*current_token)->token_type == SPL_CHAR && !(*current_token)->token_value.compare("{"))
+	{
+		if (data_decl())
+		{
+			if (statements())
+			{
+				if ((*current_token)->token_type == SPL_CHAR && !(*current_token)->token_value.compare("}"))
+				{
+					return true;
+				}
+			}
+		}
+	}
 	return false;
 }
 
@@ -110,7 +134,7 @@ bool Parser::func_decl()
 		{
 			return false;
 		}
-		if (parameter_list)
+		if (parameter_list())
 		{
 
 		}
@@ -144,34 +168,102 @@ bool Parser::type_name()
 
 bool Parser::parameter_list()
 {
+	//<parameter list> -> empty
+	//<parameter list> -> void
+	//<parameter list> -> <nonempty list>
+	if ((*current_token)->token_type == KEYWORD && !(*current_token)->token_value.compare("void"))
+	{
+		current_token++;
+		return true;
+	}
+	else if (nonempty_list())
+	{
+		return true;
+	}
 	return false;
 }
 
 bool Parser::nonempty_list()
 {
+	//<nonempty list> -> <type name> ID <extended nonempty>
+	if (type_name())
+	{
+		if ((*current_token)->token_type == IDENTIFIER)
+		{
+			current_token++;
+			if (extended_nonempty_list())
+			{
+				return true;
+			}
+		}
+	}
 	return false;
 }
 
 bool Parser::extended_nonempty_list()
 {
-	return false;
+	//<extended nonempty> -> comma <type name> ID <extended nonempty>
+	//<extended nonempty>->empty
+
+	if ((*current_token)->token_type == SPL_CHAR && !(*current_token)->token_value.compare(","))
+	{
+		current_token++;
+		if (type_name())
+		{
+			if ((*current_token)->token_type == IDENTIFIER)
+			{
+				if (extended_nonempty_list())
+					return true;
+				else
+					return false;
+			}
+			else
+			{
+				return false;
+			}
+		}
+		return false;
+	}
+	return isepsilon();
 }
+
 
 bool Parser::id_list()
 {
 	if (id())
 	{
-		/*if (extended_id_list)
-		{
-			//<extended id list> -> comma <id> <extended id list>
-		}*/
+		if (extended_id_list())
+		{			
+			return true;
+		}
 	}
 	return false;
 }
 
 bool Parser::extended_id_list()
 {
-	return false;
+	//<extended id list>->comma <id> <extended id list>
+	//<extended id list>->empty	
+	if ((*current_token)->token_type == SPL_CHAR && !(*current_token)->token_value.compare(","))
+	{
+		current_token++;
+		if (id())
+		{
+			if (extended_id_list())
+			{
+				return true;
+			}
+			else
+			{
+				return false;
+			}
+		}
+		else
+		{
+			return false;
+		}
+	}
+	return isepsilon();
 }
 
 bool Parser::id()
@@ -179,41 +271,328 @@ bool Parser::id()
 	if ((*current_token)->token_type == IDENTIFIER)
 	{
 		current_token++;
-		//ID1
-		return true;
+		//<id> -> ID <id1>
+		if(id1())
+			return true;
 	}
 	return false;
 }
 
 bool Parser::id1()
 {
-
-	return false;
+	//<id1>->empty
+	//<id1>->left_bracket <expression> right_bracket
+	if ((*current_token)->token_type == SPL_CHAR && !(*current_token)->token_value.compare("["))
+	{
+		current_token++;
+		if (expression())
+		{
+			if ((*current_token)->token_type == SPL_CHAR && !(*current_token)->token_value.compare("]"))
+			{
+				current_token++;
+				return true;
+			}
+			else
+			{
+				return false;
+			}
+		}
+		else
+		{
+			return false;
+		}
+	}
+	else
+	{
+		return isepsilon();
+	}
+	
 }
 
 bool Parser::block_statements()
 {
+	//<block statements> -> left_brace <statements> right_brace
+	if ((*current_token)->token_type == SPL_CHAR && !(*current_token)->token_value.compare("{"))
+	{
+		current_token++;
+		if (statements())
+		{
+			if ((*current_token)->token_type == SPL_CHAR && !(*current_token)->token_value.compare("}"))
+			{
+				current_token++;
+				return true;
+			}
+			else
+			{
+				return false;
+			}
+		}
+		else
+		{
+			return false;
+		}
+
+	}
 	return false;
 }
 
 bool Parser::statements()
 {
-	return false;
+	//<statements> -> empty
+	//<statements> -> <statement> <statements>
+	if (statement())
+	{
+		if (statements())
+		{
+			return true;
+		}
+		else
+		{
+			return false();
+		}
+	}
+	else
+	{
+		//what if something was wrong in statement
+		//check
+		return true;
+	}
+	//return false;
 }
 
 bool Parser::statement()
 {
-	return false;
+	/*
+	<statement> -> <assignment>
+	<statement> -> <func call>
+	<statement> -> <if statement>
+	<statement> -> <while statement>
+	<statement> -> <return statement>
+	<statement> -> <break statement>
+	<statement> -> <continue statement>
+	<statement> -> read left_parenthesis ID right_parenthesis semicolon
+	<statement> -> write left_parenthesis <expression> right_parenthesis semicolon
+	<statement> -> print left_parenthesis STRING right_parenthesis semicolon
+	*/
+	if (assignment())
+	{
+		return true;
+	}
+	else if (func_call())
+	{
+		return true;
+	}
+	else if (if_statement())
+	{
+		return true;
+	}
+	else if (while_statement())
+	{
+		return true;
+	}
+	else if (return_statement())
+	{
+		return true;
+	}
+	else if (break_statement())
+	{
+		return true;
+	}
+	else if (continue_statement())
+	{
+		return true;
+	}
+	else if ((*current_token)->token_type == KEYWORD && !((*current_token)->token_value.compare("read")))
+	{
+		current_token++;
+		if ((*current_token)->token_type == SPL_CHAR && !((*current_token)->token_value.compare("(")))
+		{
+			current_token++;
+			if ((*current_token)->token_type == IDENTIFIER)
+			{
+				current_token++;
+				if ((*current_token)->token_type == SPL_CHAR && !((*current_token)->token_value.compare(")")))
+				{
+					current_token++;
+					if ((*current_token)->token_type == SPL_CHAR && !((*current_token)->token_value.compare(";")))
+					{
+						return true;
+					}
+					else
+					{
+						return false;
+					}
+				}
+				else
+				{
+					return false;
+				}
+			}
+			else
+			{
+				return false;
+			}
+		}
+		else
+		{
+			return false;
+		}
+	}
+	else if ((*current_token)->token_type == KEYWORD && !((*current_token)->token_value.compare("write")))
+	{
+		current_token++;
+		if ((*current_token)->token_type == SPL_CHAR && !((*current_token)->token_value.compare("(")))
+		{
+			current_token++;
+			if (expression())
+			{
+				if ((*current_token)->token_type == SPL_CHAR && !((*current_token)->token_value.compare(")")))
+				{
+					current_token++;
+					if ((*current_token)->token_type == SPL_CHAR && !((*current_token)->token_value.compare(";")))
+					{
+						return true;
+					}
+					else
+					{
+						return false;
+					}
+				}
+				else
+				{
+					return false;
+				}
+
+			}
+			else
+			{
+				return false;
+			}
+		}
+		else
+		{
+			return false;
+		}
+	}
+	else if ((*current_token)->token_type == KEYWORD && !((*current_token)->token_value.compare("print")))
+	{
+		current_token++;
+		if ((*current_token)->token_type == SPL_CHAR && !((*current_token)->token_value.compare("(")))
+		{
+			current_token++;
+			if ((*current_token)->token_type == CONST)//spl check for string const
+			{
+				current_token++;
+				if ((*current_token)->token_type == SPL_CHAR && !((*current_token)->token_value.compare(")")))
+				{
+					current_token++;
+					if ((*current_token)->token_type == SPL_CHAR && !((*current_token)->token_value.compare(";")))
+					{
+						return true;
+					}
+					else
+					{
+						return false;
+					}
+				}
+			}
+			else
+			{
+				return false;
+			}
+		}
+		else
+		{
+			return false;
+		}
+	}
+	else
+	{
+		return false;
+	}
 }
 
 bool Parser::assignment()
 {
-	return false;
+	//<assignment> -> <id> equal_sign <expression> semicolon
+	if (id())
+	{
+		if ((*current_token)->token_type == OPERATOR && ((*current_token)->token_value.compare("=")))
+		{
+			current_token++;
+			if (expression())
+			{
+				if ((*current_token)->token_type == SPL_CHAR && ((*current_token)->token_value.compare(";")))
+				{
+					current_token++;
+					return true;
+				}
+				else
+				{
+					return false;
+				}
+			}
+			else
+			{
+				return false;
+			}
+		}
+		else
+		{
+			return false;
+		}
+	}
+	else
+	{
+		return false;
+	}
 }
 
 bool Parser::func_call()
 {
-	return false;
+	//<func call> -> ID left_parenthesis <expr list> right_parenthesis semicolon
+	if ((*current_token)->token_type == IDENTIFIER)
+	{
+		current_token++;
+		if ((*current_token)->token_type == SPL_CHAR && !((*current_token)->token_value.compare("(")))
+		{
+			current_token++;
+			if (expr_list())
+			{
+				current_token++;
+				if ((*current_token)->token_type == SPL_CHAR && !((*current_token)->token_value.compare(")")))
+				{
+					current_token++;
+					if ((*current_token)->token_type == SPL_CHAR && !((*current_token)->token_value.compare(";")))
+					{
+						current_token++;
+						return true;
+					}
+					else
+					{
+						return false;
+					}
+				}
+				else
+				{
+					return false;
+				}
+			}
+			else
+			{
+				return false;
+			}
+		}
+		else
+		{
+			return false;
+		}
+	}
+	else
+	{
+		return false;
+	}
+	
 }
 
 bool Parser::expr_list()
